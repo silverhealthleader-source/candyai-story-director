@@ -123,13 +123,18 @@ a {
 
 .nav a {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
+  min-width: 104px;
   padding: 0.58rem 0.9rem;
   text-decoration: none;
   color: var(--primary-dark);
   background: var(--surface-strong);
   border-color: var(--line);
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: normal;
   box-shadow: 0 4px 0 color-mix(in srgb, var(--line), #000 14%);
   transform: translateY(0);
   transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
@@ -144,6 +149,10 @@ a {
 .nav a:active {
   transform: translateY(3px);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--line), #000 14%);
+}
+
+.nav a span {
+  display: inline;
 }
 
 .theme-toggle {
@@ -192,6 +201,10 @@ h1 {
   margin: 0;
   font-size: clamp(2rem, 4.2vw, 3.9rem);
   line-height: 1.12;
+}
+
+.title-line {
+  display: inline;
 }
 
 h2 {
@@ -890,8 +903,27 @@ textarea {
   .nav {
     order: 3;
     width: 100%;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.55rem;
+    overflow: visible;
     padding-bottom: 0.2rem;
+  }
+
+  .nav a {
+    width: 100%;
+    min-width: 0;
+    min-height: 76px;
+    padding: 0.72rem 0.35rem;
+    font-size: clamp(0.78rem, 2.7vw, 1rem);
+    font-weight: 900;
+    line-height: 1.22;
+    white-space: normal;
+    flex-direction: column;
+  }
+
+  .nav a span {
+    display: block;
   }
 
   .hero,
@@ -942,6 +974,22 @@ textarea {
   .inline-actions,
   .input-with-button {
     width: 100%;
+  }
+
+  h1 {
+    max-width: 100%;
+    font-size: clamp(2.35rem, 10.5vw, 3.3rem);
+    line-height: 1.08;
+  }
+
+  .title-line {
+    display: block;
+  }
+
+  .nav a {
+    min-height: 92px;
+    font-size: clamp(0.82rem, 3.8vw, 1.08rem);
+    letter-spacing: 0;
   }
 
   .input-with-button {
