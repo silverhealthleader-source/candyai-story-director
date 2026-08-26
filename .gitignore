@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.vercel/
+node_modules/
+*.log
+screenshots/*.png
+screenshots/*.jpg
