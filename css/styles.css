@@ -480,7 +480,7 @@ textarea {
 
 .reference-chip {
   display: grid;
-  grid-template-columns: 54px auto minmax(0, 1fr) auto;
+  grid-template-columns: 54px auto minmax(0, 1fr) auto auto;
   gap: 0.55rem;
   align-items: center;
   padding: 0.58rem 0.7rem;
@@ -505,6 +505,23 @@ textarea {
 .reference-chip span,
 .reference-chip small {
   overflow-wrap: anywhere;
+}
+
+.reference-remove {
+  border: 1px solid color-mix(in srgb, var(--danger), #fff 35%);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger), #fff 82%);
+  color: #7f1d1d;
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--danger), #000 20%);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0.48rem 0.65rem;
+  white-space: nowrap;
+}
+
+.reference-remove:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--danger), #000 20%);
 }
 
 textarea {

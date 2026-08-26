@@ -1011,6 +1011,17 @@ const referenceImageText = (images = []) => {
   return images.map((image, index) => `${index + 1}. ${image.name} (${image.type}, ${image.size})`).join("; ");
 };
 
+const removeReferenceImage = (removeIndex) => {
+  const files = referenceImageFiles();
+  const dataTransfer = new DataTransfer();
+  files.forEach((file, index) => {
+    if (index !== removeIndex) dataTransfer.items.add(file);
+  });
+  referenceImagesInput.files = dataTransfer.files;
+  updateReferenceList();
+  setStatus(`레퍼런스 이미지 ${removeIndex + 1}번을 삭제했습니다.`);
+};
+
 const updateReferenceList = () => {
   referencePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
   referencePreviewUrls = [];
@@ -1037,6 +1048,7 @@ const updateReferenceList = () => {
         <strong>REF ${String(index + 1).padStart(2, "0")}</strong>
         <span>${escapeHtml(file.name)}</span>
         <small>${escapeHtml(file.type || "unknown image format")} · ${formatBytes(file.size)}</small>
+        <button class="reference-remove" type="button" data-reference-remove="${index}" aria-label="${escapeHtml(file.name)} 삭제">삭제</button>
       </div>
     `;
     })
@@ -2178,6 +2190,14 @@ document.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
     clipboardText(copyTarget);
+    return;
+  }
+
+  const referenceRemoveButton = event.target.closest("[data-reference-remove]");
+  if (referenceRemoveButton) {
+    event.preventDefault();
+    const removeIndex = Number(referenceRemoveButton.dataset.referenceRemove);
+    if (Number.isInteger(removeIndex)) removeReferenceImage(removeIndex);
     return;
   }
 
