@@ -1,13 +1,13 @@
 {
   "functions": {
-    "api/generate.py": {
+    "api/index.py": {
       "maxDuration": 60
     }
   },
   "rewrites": [
     {
       "source": "/api/generate",
-      "destination": "/api/generate.py"
+      "destination": "/api/index.py"
     }
   ]
 }

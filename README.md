@@ -21,7 +21,7 @@
 ├─ js/
 │  └─ app.js
 ├─ api/
-│  └─ generate.py
+│  └─ index.py
 ├─ docs/
 │  └─ service_plan.md
 ├─ screenshots/
@@ -150,7 +150,7 @@ gpt-4.1-mini
 1. 사용자가 작품 아이디어와 등장인물 메모를 입력합니다.
 2. 필요한 경우 레퍼런스 이미지를 최대 5개까지 선택합니다.
 3. `js/app.js`가 입력값과 레퍼런스 이미지 정보를 JSON으로 만들고 `fetch('/api/generate')`로 전송합니다.
-4. `api/generate.py`가 OpenAI API를 호출합니다.
+4. `api/index.py`가 OpenAI API를 호출합니다.
 5. 응답 JSON이 스토리보드, 이미지/영상 프롬프트, 수노 음악 프롬프트, 캐릭터 시트 생성 프롬프트 아코디언에 표시됩니다.
 
 ## 8. 테스트 입력 예시
