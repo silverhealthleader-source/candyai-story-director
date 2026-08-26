@@ -1,0 +1,11 @@
+[project]
+name = "candyai-story-director"
+version = "0.1.0"
+description = "Bilingual storyboard, image/video prompt, character sheet, and Suno music prompt studio."
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "openai==1.99.9"
+]
+
+[tool.vercel]
+entrypoint = "api.generate:handler"
