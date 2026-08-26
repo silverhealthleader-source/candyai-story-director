@@ -1,6 +1,8 @@
 import json
 import os
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import unquote, urlparse
 
 from openai import OpenAI
 
@@ -13,6 +15,20 @@ Do not claim that images, videos, or music are being generated directly. Return 
 """
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+STATIC_TYPES = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+}
+
+
 def _json_response(handler, status, payload):
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     handler.send_response(status)
@@ -23,6 +39,24 @@ def _json_response(handler, status, payload):
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
+
+
+def _send_static(handler, request_path):
+    parsed_path = unquote(urlparse(request_path).path)
+    clean_path = parsed_path.strip("/")
+    if not clean_path:
+        clean_path = "index.html"
+
+    file_path = (PROJECT_ROOT / clean_path).resolve()
+    if not str(file_path).startswith(str(PROJECT_ROOT)) or not file_path.is_file():
+        file_path = PROJECT_ROOT / "index.html"
+
+    content = file_path.read_bytes()
+    handler.send_response(200)
+    handler.send_header("Content-Type", STATIC_TYPES.get(file_path.suffix.lower(), "application/octet-stream"))
+    handler.send_header("Content-Length", str(len(content)))
+    handler.end_headers()
+    handler.wfile.write(content)
 
 
 def _validate(payload):
@@ -175,6 +209,9 @@ def _generate(payload):
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         _json_response(self, 200, {"ok": True})
+
+    def do_GET(self):
+        _send_static(self, self.path)
 
     def do_POST(self):
         try:
