@@ -1195,7 +1195,7 @@ const fillSample = (category = "all", autoGenerate = false) => {
   const sample = pool[Math.floor(Math.random() * pool.length)] || sampleProjects[0];
   currentSampleCategory = sample.category || category || "all";
   document.querySelector("#idea").value = sample.idea;
-  document.querySelector("#characters").value = sample.characters;
+  document.querySelector("#characterNotes").value = sample.characters;
   document.querySelector("#audience").value = sample.audience;
   document.querySelector("#visualStyle").value = sample.visualStyle;
   document.querySelector("#sceneCount").value = sample.sceneCount;
@@ -2349,9 +2349,9 @@ form.addEventListener("submit", async (event) => {
     : "";
   const payload = {
     idea,
-    characters: document.querySelector("#characters").value.trim(),
-    characters_en: localCharacterEn(document.querySelector("#characters").value.trim()),
-    characters_ko: localCharacterKo(document.querySelector("#characters").value.trim()),
+    characters: document.querySelector("#characterNotes").value.trim(),
+    characters_en: localCharacterEn(document.querySelector("#characterNotes").value.trim()),
+    characters_ko: localCharacterKo(document.querySelector("#characterNotes").value.trim()),
     audience: document.querySelector("#audience").value.trim(),
     visual_style: document.querySelector("#visualStyle").value,
     scene_count: clampNumber(document.querySelector("#sceneCount").value, 3, 50, 4),
