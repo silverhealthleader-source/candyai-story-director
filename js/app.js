@@ -1266,28 +1266,28 @@ const buildToolPrompt = (tool, payload, sceneIndex, sceneTitleEn, sceneTitleKo, 
     : "외부 레퍼런스 이미지 없음";
   const styleKo = visualStyleKo[payload.visual_style] || "전문적인 동화책 이미지 스타일";
   const durationTextKo = durationKo[payload.duration] || payload.duration || "짧은 영상";
-  const baseEn = `${sceneTitleEn}, ${beatEn}, ${payload.visual_style}, ${characterHintEn}, ${referenceHintEn}, gentle cinematic lighting, clear composition, no text in image`;
-  const baseKo = `${sceneTitleKo}, ${beatKo}, ${styleKo}, ${characterHintKo}, ${referenceHintKo}, 부드러운 영화적 조명, 명확한 구도, 이미지 안 글자 없음`;
+  const baseEn = `${sceneTitleEn}, ${beatEn}, ${payload.visual_style}, protagonist and cast identity: ${characterHintEn}, ${referenceHintEn}, professional field-ready visual direction, clear subject, expressive environment, cinematic lighting, strong composition, intentional color palette, camera viewpoint, key props, continuity cues, no text, no watermark, no distorted anatomy`;
+  const baseKo = `${sceneTitleKo}, ${beatKo}, ${styleKo}, 주인공과 등장인물 정체성: ${characterHintKo}, ${referenceHintKo}, 전문 분야에 맞는 시각 연출, 명확한 피사체, 표현력 있는 배경, 영화적 조명, 안정적인 구도, 의도적인 색상 팔레트, 카메라 시점, 핵심 소품, 연속성 유지, 이미지 안 글자 없음, 워터마크 없음, 왜곡된 신체 없음`;
 
   const guideEn = {
-    FLOW: "storyboard continuity, reference character sheet, camera direction",
-    Midjourney: "premium illustration, composition, lighting, aspect ratio, highly detailed",
-    Kling: "subject movement, camera path, temporal consistency, beginning and ending frame",
-    HeyGen: "presenter narration, avatar direction, warm educational storytelling tone"
+    FLOW: "shot planning, storyboard continuity, reference character sheet, camera direction, opening frame and ending frame",
+    Midjourney: "premium image prompt, composition, lighting, aspect ratio, lens language, material texture, highly detailed",
+    Kling: "subject motion, camera path, physics, temporal consistency, beginning frame, ending frame, smooth movement",
+    HeyGen: "presenter or avatar direction, narration tone, background setting, gesture guidance, clean educational delivery"
   }[tool] || "tool-ready production prompt";
 
   const guideKo = {
-    FLOW: "스토리보드 연속성, 캐릭터 시트 참조, 카메라 방향",
-    Midjourney: "고급 일러스트 품질, 안정적인 구도, 섬세한 조명, 화면 비율, 높은 디테일",
-    Kling: "피사체 움직임, 카메라 경로, 시간 흐름의 일관성, 시작 프레임과 끝 프레임",
-    HeyGen: "프레젠터 내레이션, 아바타 연출, 따뜻한 교육형 이야기 전달 톤"
+    FLOW: "샷 설계, 스토리보드 연속성, 캐릭터 시트 참조, 카메라 방향, 시작 프레임과 끝 프레임",
+    Midjourney: "전문 이미지 프롬프트, 안정적인 구도, 섬세한 조명, 화면 비율, 렌즈 표현, 재질감, 높은 디테일",
+    Kling: "피사체 움직임, 카메라 경로, 물리감, 시간 흐름의 일관성, 시작 프레임, 끝 프레임, 부드러운 움직임",
+    HeyGen: "프레젠터 또는 아바타 연출, 내레이션 톤, 배경 설정, 제스처 지시, 깔끔한 교육형 전달"
   }[tool] || "도구에 바로 붙여 넣기 좋은 전문 제작 프롬프트";
 
   return {
     image_en: `${baseEn}, ${guideEn}, scene ${sceneIndex}`,
     image_ko: `${baseKo}, ${guideKo}, ${sceneIndex}번째 장면`,
-    video_en: `${baseEn}, ${payload.duration}, slow camera move, character action stays consistent, ${guideEn}`,
-    video_ko: `${baseKo}, ${durationTextKo}, 느린 카메라 움직임, 캐릭터 행동과 외형 일관성 유지, ${guideKo}`
+    video_en: `${baseEn}, ${payload.duration}, opening frame, ending frame, scene-specific action, controlled camera movement, pacing matched to the story beat, character action and appearance stay consistent, ${guideEn}`,
+    video_ko: `${baseKo}, ${durationTextKo}, 시작 프레임, 끝 프레임, 장면별 고유 행동, 제어된 카메라 움직임, 이야기 감정선에 맞는 속도, 캐릭터 행동과 외형 일관성 유지, ${guideKo}`
   };
 };
 
