@@ -4,7 +4,7 @@
 
 이 앱은 이미지와 영상을 직접 생성하지 않습니다. 대신 각 생성 도구에 복사해 사용할 수 있는 전문 프롬프트 패키지를 만듭니다.
 
-- 배포 URL: https://candyai-story-director-seven.vercel.app
+- 배포 URL: https://API문제로 동료평가후 삭제합니다 .app
 - GitHub 저장소 URL: https://github.com/silverhealthleader-source/candyai-story-director
 
 ## 1. 기술 스택
@@ -200,7 +200,7 @@ gpt-4.1-mini
 10. 배포가 끝나면 Vercel URL을 복사합니다.
 11. 아래 칸에 붙여 넣습니다.
 
-배포 URL: https://candyai-story-director-seven.vercel.app
+배포 URL: https://API문제로 동료평가후 삭제합니다.app
 
 ## 7. AI 기능 동작 흐름
 
