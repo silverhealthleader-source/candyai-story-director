@@ -67,7 +67,7 @@ python -m http.server 8000
 브라우저 주소창에 아래 주소를 입력합니다.
 
 ```text
-http://localhost:8000
+배포 URL: https://candyai-story-director-seven.vercel.app
 ```
 
 화면이 열리면 홈, 프롬프트 작성, 스토리보드, 프롬프트, 음악 프롬프트, 캐릭터시트 메뉴를 눌러 봅니다.
