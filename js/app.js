@@ -10,6 +10,10 @@ const themeToggle = document.querySelector("#themeToggle");
 const copyAllButton = document.querySelector("#copyAllButton");
 const downloadJsonButton = document.querySelector("#downloadJsonButton");
 const musicPromptButton = document.querySelector("#musicPromptButton");
+const scenarioButton = document.querySelector("#scenarioButton");
+const characterSheetButton = document.querySelector("#characterSheetButton");
+const imageVideoPromptButton = document.querySelector("#imageVideoPromptButton");
+const sunoPromptButton = document.querySelector("#sunoPromptButton");
 const toolPreview = document.querySelector("#toolPreview");
 const customSceneButton = document.querySelector("#customSceneButton");
 const customDurationButton = document.querySelector("#customDurationButton");
@@ -28,6 +32,7 @@ const sampleIdea = "A small star runs a secret mailroom inside an old forest, de
 let latestResult = null;
 let currentSampleCategory = "all";
 let musicPromptManuallyEdited = false;
+let completedStep = 0;
 
 const musicStyles = [
   ["warm orchestral lullaby", "따뜻한 오케스트라 자장가"],
@@ -967,7 +972,43 @@ const clearStatus = () => {
 const setResultActions = (enabled) => {
   copyAllButton.disabled = !enabled;
   downloadJsonButton.disabled = !enabled;
-  musicPromptButton.disabled = !enabled;
+  musicPromptButton.disabled = !latestResult?.music;
+};
+
+const setStepButtons = () => {
+  if (scenarioButton) scenarioButton.disabled = false;
+  if (characterSheetButton) characterSheetButton.disabled = completedStep < 1;
+  if (imageVideoPromptButton) imageVideoPromptButton.disabled = completedStep < 2;
+  if (sunoPromptButton) sunoPromptButton.disabled = completedStep < 3;
+};
+
+const mergeScenes = (oldScenes = [], newScenes = []) => {
+  if (!newScenes.length) return oldScenes;
+  return newScenes.map((scene, index) => {
+    const previous = oldScenes.find((item) => Number(item.scene_no) === Number(scene.scene_no))
+      || oldScenes[index]
+      || {};
+    return {
+      ...previous,
+      ...scene,
+      prompts: {
+        ...(previous.prompts || {}),
+        ...(scene.prompts || {})
+      }
+    };
+  });
+};
+
+const mergeGeneratedResult = (next = {}) => {
+  latestResult = {
+    ...(latestResult || {}),
+    ...next,
+    character_sheets: next.character_sheets || latestResult?.character_sheets || [],
+    scenes: mergeScenes(latestResult?.scenes || [], next.scenes || []),
+    music: next.music || latestResult?.music || null
+  };
+  setResultActions(Boolean(latestResult));
+  return latestResult;
 };
 
 const escapeHtml = (value = "") =>
@@ -982,7 +1023,7 @@ const selectedTools = () =>
   Array.from(document.querySelectorAll("input[name='tools']:checked")).map((item) => item.value);
 
 const selectedMusicStyle = () =>
-  document.querySelector("input[name='musicStyle']:checked")?.value || "warm orchestral lullaby";
+  document.querySelector("input[name='musicStyle']:checked")?.value || "";
 
 const referenceImageFiles = () => Array.from(referenceImagesInput?.files || []);
 
@@ -1094,7 +1135,11 @@ const durationKo = {
   "60 seconds": "1분",
   "90 seconds": "1분 30초",
   "120 seconds": "2분",
-  "180 seconds": "3분"
+  "180 seconds": "3분",
+  "300 seconds": "5분",
+  "600 seconds": "10분",
+  "1800 seconds": "30분",
+  "3690 seconds": "1시간 1분 30초"
 };
 
 const hasHangul = (value = "") => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
@@ -1136,7 +1181,7 @@ const clampNumber = (value, min, max, fallback) => {
 
 const selectedDuration = () => {
   const customSeconds = customDurationWrap && !customDurationWrap.hidden
-    ? clampNumber(customDurationInput.value, 6, 180, 0)
+    ? clampNumber(customDurationInput.value, 6, 3690, 0)
     : 0;
   if (customSeconds) {
     return `${customSeconds} seconds`;
@@ -1150,7 +1195,7 @@ const renderMusicStyleButtons = () => {
   musicStyleGrid.innerHTML = musicStyles
     .map(([value, label], index) => `
       <label class="music-style-button">
-        <input type="radio" name="musicStyle" value="${escapeHtml(value)}" ${index === 0 ? "checked" : ""}>
+        <input type="radio" name="musicStyle" value="${escapeHtml(value)}">
         <span>${escapeHtml(label)}</span>
         <small>${escapeHtml(value)}</small>
       </label>
@@ -1177,6 +1222,8 @@ const renderSampleCategoryButtons = () => {
 
 const resetGeneratedOutputs = () => {
   latestResult = null;
+  completedStep = 0;
+  setStepButtons();
   setResultActions(false);
   characterOutput.className = "accordion empty-state";
   characterOutput.textContent = "새 예시가 입력되었습니다. 스토리보드와 프롬프트를 다시 작성 중입니다.";
@@ -1208,10 +1255,9 @@ const fillSample = (category = "all", autoGenerate = false) => {
   customMusicPromptButton.textContent = "직접 입력 열기";
   musicPromptManuallyEdited = false;
   const categoryLabel = sampleCategories.find(([value]) => value === category)?.[1] || "전체 랜덤";
-  setStatus(`${categoryLabel} 분야 예시를 랜덤으로 채웠습니다. 스토리보드와 프롬프트를 다시 작성합니다.`);
+  setStatus(`${categoryLabel} 분야 예시를 랜덤으로 채웠습니다. 2번 시나리오 생성부터 차례대로 진행해 주세요.`);
   if (autoGenerate) {
     resetGeneratedOutputs();
-    window.setTimeout(() => form.requestSubmit(), 0);
   }
 };
 
@@ -1843,8 +1889,8 @@ const buildStoryMusic = (payload) => {
 };
 
 const buildLocalPreview = (payload) => {
-  const sceneCount = clampNumber(payload.scene_count, 3, 50, 4);
-  const tools = payload.tools || ["FLOW", "Midjourney", "Kling", "HeyGen"];
+  const sceneCount = clampNumber(payload.scene_count, 3, 10, 4);
+  const tools = payload.tools || [];
   const styleKo = visualStyleKo[payload.visual_style] || "전문적인 동화책 이미지 스타일";
 
   const scenes = Array.from({ length: sceneCount }, (_, index) => {
@@ -1875,6 +1921,29 @@ const buildLocalPreview = (payload) => {
     scenes,
     music: buildStoryMusic(payload)
   };
+};
+
+const buildLocalStepPreview = (payload) => {
+  const full = buildLocalPreview(payload);
+  if (payload.generation_step === "scenario") {
+    return {
+      project_title_en: full.project_title_en,
+      project_title_ko: full.project_title_ko,
+      logline_en: full.logline_en,
+      logline_ko: full.logline_ko,
+      scenes: full.scenes.map(({ prompts, ...scene }) => scene)
+    };
+  }
+  if (payload.generation_step === "characters") {
+    return { character_sheets: full.character_sheets };
+  }
+  if (payload.generation_step === "prompts") {
+    return { scenes: full.scenes };
+  }
+  if (payload.generation_step === "music") {
+    return { music: full.music };
+  }
+  return full;
 };
 
 const clipboardText = (button) => {
@@ -2232,6 +2301,26 @@ document.addEventListener("click", (event) => {
 
 renderMusicStyleButtons();
 renderSampleCategoryButtons();
+setStepButtons();
+
+document.querySelectorAll("input[name='tools']").forEach((checkbox) => {
+  checkbox.addEventListener("change", () => {
+    const tools = selectedTools();
+    if (tools.length > 2) {
+      checkbox.checked = false;
+      setStatus("이미지/영상 프롬프트 도구는 한 번에 최대 2개까지만 선택할 수 있습니다.", "error");
+      return;
+    }
+    if (completedStep >= 3) {
+      completedStep = 2;
+      setStepButtons();
+      promptOutput.className = "accordion empty-state";
+      promptOutput.textContent = "도구 선택이 바뀌었습니다. 4번 이미지·영상 프롬프트 생성을 다시 눌러 주세요.";
+      musicOutput.className = "accordion empty-state";
+      musicOutput.textContent = "이미지·영상 프롬프트를 다시 작성한 뒤 5번 수노 음악 프롬프트 생성을 눌러 주세요.";
+    }
+  });
+});
 
 sampleButton.addEventListener("click", () => {
   fillSample("all", true);
@@ -2241,14 +2330,14 @@ customSceneButton.addEventListener("click", () => {
   const sceneInput = document.querySelector("#sceneCount");
   sceneInput.focus();
   sceneInput.select();
-  setStatus("장면 수를 3부터 50 사이로 직접 입력할 수 있습니다.");
+  setStatus("장면 수를 3부터 10 사이로 직접 입력할 수 있습니다.");
 });
 
 customDurationButton.addEventListener("click", () => {
   customDurationWrap.hidden = !customDurationWrap.hidden;
   if (!customDurationWrap.hidden) {
     customDurationInput.focus();
-    setStatus("영상 길이를 6초부터 180초 사이로 직접 입력할 수 있습니다.");
+    setStatus("영상 길이를 6초부터 3690초(1시간 1분 30초) 사이로 직접 입력할 수 있습니다.");
   }
 });
 
@@ -2272,6 +2361,8 @@ clearButton.addEventListener("click", () => {
   latestResult = null;
   currentSampleCategory = "all";
   musicPromptManuallyEdited = false;
+  completedStep = 0;
+  setStepButtons();
   setResultActions(false);
   customDurationWrap.hidden = true;
   customDurationInput.value = "";
@@ -2329,32 +2420,21 @@ if (localStorage.getItem("storyforge-theme") === "dark") {
   document.body.classList.add("dark");
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+const buildPayload = (generationStep) => {
   const idea = document.querySelector("#idea").value.trim();
   const tools = selectedTools();
-
-  if (!idea) {
-    setStatus("스토리 내용을 입력해 주세요. 빈 입력으로는 스토리보드와 프롬프트를 작성할 수 없습니다.", "error");
-    return;
-  }
-
-  if (!tools.length) {
-    setStatus("최소 1개 이상의 프롬프트 도구를 선택해 주세요.", "error");
-    return;
-  }
-
   const manualMusicPrompt = !customMusicPromptWrap.hidden && musicPromptManuallyEdited
     ? customMusicPromptInput.value.trim()
     : "";
-  const payload = {
+  return {
+    generation_step: generationStep,
     idea,
     characters: document.querySelector("#characterNotes").value.trim(),
     characters_en: localCharacterEn(document.querySelector("#characterNotes").value.trim()),
     characters_ko: localCharacterKo(document.querySelector("#characterNotes").value.trim()),
     audience: document.querySelector("#audience").value.trim(),
     visual_style: document.querySelector("#visualStyle").value,
-    scene_count: clampNumber(document.querySelector("#sceneCount").value, 3, 50, 4),
+    scene_count: clampNumber(document.querySelector("#sceneCount").value, 3, 10, 4),
     duration: selectedDuration(),
     reference_images: referenceImageMeta(),
     sample_category: currentSampleCategory,
@@ -2363,25 +2443,97 @@ form.addEventListener("submit", async (event) => {
     music_prompt_en: localMusicPromptEn(manualMusicPrompt),
     tools,
     include_lyrics: document.querySelector("#includeLyrics").checked,
-    instrumental: document.querySelector("#instrumental").checked
+    instrumental: document.querySelector("#instrumental").checked,
+    previous_result: latestResult || {}
   };
+};
+
+const stepStatus = {
+  scenario: {
+    loading: "2번 시나리오를 생성 중입니다. 장면 제목과 스토리보드 흐름만 먼저 만듭니다.",
+    done: "2번 시나리오 생성이 완료되었습니다. 다음은 3번 캐릭터 시트 프롬프트 생성입니다.",
+    hash: "#storyboard",
+    stepNo: 1
+  },
+  characters: {
+    loading: "3번 캐릭터 시트 프롬프트를 생성 중입니다. 주인공과 등장인물을 별도 시트로 나눕니다.",
+    done: "3번 캐릭터 시트 프롬프트 생성이 완료되었습니다. 다음은 4번 이미지·영상 프롬프트 생성입니다.",
+    hash: "#characters",
+    stepNo: 2
+  },
+  prompts: {
+    loading: "4번 이미지·영상 프롬프트를 생성 중입니다. 선택한 도구만 처리합니다.",
+    done: "4번 이미지·영상 프롬프트 생성이 완료되었습니다. 다음은 5번 수노 음악 프롬프트 생성입니다.",
+    hash: "#prompts",
+    stepNo: 3
+  },
+  music: {
+    loading: "5번 수노 음악 프롬프트를 생성 중입니다. 스토리 분위기와 선택 옵션을 반영합니다.",
+    done: "5번 수노 음악 프롬프트 생성이 완료되었습니다.",
+    hash: "#music",
+    stepNo: 4
+  }
+};
+
+const validateStep = (payload) => {
+  if (!payload.idea) {
+    return "스토리 내용을 입력해 주세요. 빈 입력으로는 시나리오와 프롬프트를 작성할 수 없습니다.";
+  }
+  if (payload.generation_step === "prompts" && !payload.tools.length) {
+    return "4번 이미지·영상 프롬프트를 만들려면 FLOW, Midjourney, Kling, HeyGen 중 1개 이상을 선택해 주세요.";
+  }
+  if (payload.tools.length > 2) {
+    return "이미지/영상 프롬프트 도구는 한 번에 최대 2개까지만 선택할 수 있습니다.";
+  }
+  return "";
+};
+
+const renderStep = (step, data) => {
+  const merged = mergeGeneratedResult(data);
+  if (step === "scenario") {
+    renderStoryboard(merged);
+    characterOutput.className = "accordion empty-state";
+    characterOutput.textContent = "시나리오가 준비되었습니다. 3번 캐릭터 시트 프롬프트 생성을 눌러 주세요.";
+  }
+  if (step === "characters") {
+    renderCharacterSheets(merged.character_sheets);
+    promptOutput.className = "accordion empty-state";
+    promptOutput.textContent = "캐릭터 시트가 준비되었습니다. 도구를 최대 2개 선택한 뒤 4번 이미지·영상 프롬프트 생성을 눌러 주세요.";
+  }
+  if (step === "prompts") {
+    renderPrompts(merged);
+    musicOutput.className = "accordion empty-state";
+    musicOutput.textContent = "이미지·영상 프롬프트가 준비되었습니다. 5번 수노 음악 프롬프트 생성을 눌러 주세요.";
+  }
+  if (step === "music") {
+    renderMusic(merged.music);
+  }
+};
+
+const runGenerationStep = async (step) => {
+  const payload = buildPayload(step);
+  const validationError = validateStep(payload);
+  if (validationError) {
+    setStatus(validationError, "error");
+    return;
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 45000);
-  setStatus("AI가 영상 스토리보드와 이미지·영상 생성 프롬프트를 작성 중입니다.");
+  setStatus(stepStatus[step].loading);
+
+  [scenarioButton, characterSheetButton, imageVideoPromptButton, sunoPromptButton].forEach((button) => {
+    if (button) button.disabled = true;
+  });
 
   try {
     if (isLocalPreview()) {
-      const data = buildLocalPreview(payload);
-      latestResult = data;
-      setResultActions(true);
-      renderCharacterSheets(data.character_sheets);
-      renderStoryboard(data);
-      renderPrompts(data);
-      musicOutput.className = "accordion empty-state";
-      musicOutput.textContent = "수노 음악 프롬프트 버튼이 활성화되었습니다. 버튼을 누르면 배경음악 스타일과 가사를 확인할 수 있습니다.";
-      clearStatus();
-      location.hash = "#storyboard";
+      const data = buildLocalStepPreview(payload);
+      renderStep(step, data);
+      completedStep = Math.max(completedStep, stepStatus[step].stepNo);
+      setStepButtons();
+      setStatus(stepStatus[step].done);
+      location.hash = stepStatus[step].hash;
       return;
     }
 
@@ -2401,15 +2553,11 @@ form.addEventListener("submit", async (event) => {
     if (!response.ok) {
       throw new Error(data.error || "AI API 호출 중 오류가 발생했습니다.");
     }
-    latestResult = data;
-    setResultActions(true);
-    renderCharacterSheets(data.character_sheets);
-    renderStoryboard(data);
-    renderPrompts(data);
-    musicOutput.className = "accordion empty-state";
-    musicOutput.textContent = "수노 음악 프롬프트 버튼이 활성화되었습니다. 버튼을 누르면 배경음악 스타일과 가사를 확인할 수 있습니다.";
-    clearStatus();
-    location.hash = "#storyboard";
+    renderStep(step, data);
+    completedStep = Math.max(completedStep, stepStatus[step].stepNo);
+    setStepButtons();
+    setStatus(stepStatus[step].done);
+    location.hash = stepStatus[step].hash;
   } catch (error) {
     const message = error.name === "AbortError"
       ? "응답 시간이 길어지고 있습니다. 잠시 후 다시 시도하거나 장면 수를 줄여 주세요."
@@ -2417,7 +2565,17 @@ form.addEventListener("submit", async (event) => {
         ? "AI API에 연결하지 못했습니다. 로컬에서는 http://localhost:8000으로 열고, 배포 후에는 Vercel 환경 변수와 /api/generate 설정을 확인해 주세요."
         : error.message;
     setStatus(message, "error");
+    setStepButtons();
   } finally {
     clearTimeout(timeout);
   }
+};
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await runGenerationStep("scenario");
 });
+
+characterSheetButton.addEventListener("click", () => runGenerationStep("characters"));
+imageVideoPromptButton.addEventListener("click", () => runGenerationStep("prompts"));
+sunoPromptButton.addEventListener("click", () => runGenerationStep("music"));

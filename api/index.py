@@ -62,75 +62,127 @@ def _send_static(handler, request_path):
 def _validate(payload):
     idea = str(payload.get("idea", "")).strip()
     tools = payload.get("tools", [])
+    step = str(payload.get("generation_step", "full")).strip() or "full"
     try:
         scene_count = int(payload.get("scene_count", 4) or 4)
     except (TypeError, ValueError):
         return "장면 수는 숫자로 입력해 주세요."
     if not idea:
         return "작품 아이디어를 입력해 주세요."
-    if not isinstance(tools, list) or not tools:
-        return "최소 1개 이상의 프롬프트 도구를 선택해 주세요."
-    if scene_count < 3 or scene_count > 50:
-        return "장면 수는 3개에서 50개 사이로 설정해 주세요."
+    if step in {"full", "prompts"}:
+        if not isinstance(tools, list) or not tools:
+            return "이미지/영상 프롬프트를 만들려면 최소 1개 이상의 도구를 선택해 주세요."
+        if len(tools) > 2:
+            return "이미지/영상 프롬프트 도구는 한 번에 최대 2개까지만 선택해 주세요."
+    if scene_count < 3 or scene_count > 10:
+        return "장면 수는 3개에서 10개 사이로 설정해 주세요."
     reference_images = payload.get("reference_images", [])
     if isinstance(reference_images, list) and len(reference_images) > 5:
         return "레퍼런스 이미지는 최대 5개까지 사용할 수 있습니다."
     return None
 
 
-def _build_user_prompt(payload):
-    schema = {
+def _schema_for_step(step):
+    if step == "scenario":
+        return {
+            "project_title_en": "string",
+            "project_title_ko": "string",
+            "logline_en": "string",
+            "logline_ko": "string",
+            "scenes": [
+                {
+                    "scene_no": "number, starting at 1",
+                    "title_en": "string",
+                    "title_ko": "string",
+                    "summary_en": "string",
+                    "summary_ko": "string",
+                    "visual_note": "string in Korean"
+                }
+            ]
+        }
+    if step == "characters":
+        return {
+            "character_sheets": [
+                {
+                    "name_en": "string",
+                    "name_ko": "string",
+                    "role_en": "string",
+                    "role_ko": "string",
+                    "appearance_en": "string",
+                    "appearance_ko": "string",
+                    "costume_en": "string",
+                    "costume_ko": "string",
+                    "personality_en": "string",
+                    "personality_ko": "string",
+                    "consistency_rules_en": "string",
+                    "consistency_rules_ko": "string",
+                    "sheet_prompt_en": "string",
+                    "sheet_prompt_ko": "string",
+                    "negative_prompt_en": "string",
+                    "negative_prompt_ko": "string"
+                }
+            ]
+        }
+    if step == "prompts":
+        return {
+            "scenes": [
+                {
+                    "scene_no": "number, matching the storyboard",
+                    "title_en": "string",
+                    "title_ko": "string",
+                    "summary_en": "string",
+                    "summary_ko": "string",
+                    "visual_note": "string in Korean",
+                    "prompts": {
+                        "FLOW": {
+                            "image_en": "string",
+                            "image_ko": "string",
+                            "video_en": "string",
+                            "video_ko": "string"
+                        }
+                    }
+                }
+            ]
+        }
+    if step == "music":
+        return {
+            "music": {
+                "style_en": "string",
+                "style_ko": "string",
+                "lyrics_en": "string",
+                "lyrics_ko": "string"
+            }
+        }
+    return {
         "project_title_en": "string",
         "project_title_ko": "string",
         "logline_en": "string",
         "logline_ko": "string",
-        "character_sheets": [
-            {
-                "name_en": "string",
-                "name_ko": "string",
-                "role_en": "string",
-                "role_ko": "string",
-                "appearance_en": "string",
-                "appearance_ko": "string",
-                "costume_en": "string",
-                "costume_ko": "string",
-                "personality_en": "string",
-                "personality_ko": "string",
-                "consistency_rules_en": "string",
-                "consistency_rules_ko": "string",
-                "sheet_prompt_en": "string",
-                "sheet_prompt_ko": "string",
-                "negative_prompt_en": "string",
-                "negative_prompt_ko": "string"
-            }
-        ],
-        "scenes": [
-            {
-                "scene_no": "number, starting at 1",
-                "title_en": "string",
-                "title_ko": "string",
-                "summary_en": "string",
-                "summary_ko": "string",
-                "visual_note": "string in Korean",
-                "prompts": {
-                    "FLOW": {
-                        "image_en": "string",
-                        "image_ko": "string",
-                        "video_en": "string",
-                        "video_ko": "string"
-                    }
-                }
-            }
-        ],
-        "music": {
-            "style_en": "string",
-            "style_ko": "string",
-            "lyrics_en": "string",
-            "lyrics_ko": "string"
-        }
+        "character_sheets": _schema_for_step("characters")["character_sheets"],
+        "scenes": _schema_for_step("prompts")["scenes"],
+        "music": _schema_for_step("music")["music"],
     }
+
+
+def _build_user_prompt(payload):
+    step = str(payload.get("generation_step", "full")).strip() or "full"
+    schema = _schema_for_step(step)
+    tools = payload.get("tools", [])
+    if step in {"full", "prompts"} and isinstance(tools, list) and tools:
+        tool_schema = {
+            tool: {
+                "image_en": "string",
+                "image_ko": "string",
+                "video_en": "string",
+                "video_ko": "string"
+            }
+            for tool in tools
+        }
+        schema["scenes"][0]["prompts"] = tool_schema
+    previous_result = payload.get("previous_result", {})
     return f"""
-Create a complete storyboard and prompt-writing package using this exact JSON shape:
+Generation step: {step}
+Create only the requested step using this exact JSON shape:
 {json.dumps(schema, ensure_ascii=False)}
 
 Project idea: {payload.get("idea")}
@@ -148,9 +200,16 @@ User music prompt direction: {payload.get("music_prompt")}
 English-adapted music prompt direction: {payload.get("music_prompt_en")}
 Include lyrics: {payload.get("include_lyrics")}
 Instrumental preference: {payload.get("instrumental")}
+Previously generated result to continue from:
+{json.dumps(previous_result, ensure_ascii=False)[:12000]}
 
 Rules:
 - Keep the response concise enough for a web app. Prefer practical production-ready prompts over long explanations.
+- Generate only the fields in the JSON schema for the requested step. Do not add unrelated sections.
+- For scenario step, return the story title, logline, and unique storyboard scenes only.
+- For characters step, return separate character sheet prompts only.
+- For prompts step, return image/video prompts only for the selected tools and reuse the existing storyboard and character sheets from Previously generated result.
+- For music step, return only the Suno music prompt and lyrics, using the story and previous results as the basis.
 - Write each storyboard summary in 1 sentence per language.
 - Write each image/video prompt as one compact production prompt per language, not a paragraph essay.
 - Write character sheet fields as compact but specific descriptions.
@@ -197,6 +256,17 @@ def _generate(payload):
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY 환경 변수가 설정되어 있지 않습니다.")
 
+    step = str(payload.get("generation_step", "full")).strip() or "full"
+    default_tokens_by_step = {
+        "scenario": 2200,
+        "characters": 2600,
+        "prompts": 5000,
+        "music": 1600,
+        "full": 6500,
+    }
+    env_token_limit = int(os.environ.get("OPENAI_MAX_OUTPUT_TOKENS", "6500"))
+    max_output_tokens = min(env_token_limit, default_tokens_by_step.get(step, 6500))
+
     client = OpenAI(api_key=api_key, timeout=45)
     response = client.responses.create(
         model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
@@ -205,7 +275,7 @@ def _generate(payload):
             {"role": "user", "content": _build_user_prompt(payload)},
         ],
         text={"format": {"type": "json_object"}},
-        max_output_tokens=int(os.environ.get("OPENAI_MAX_OUTPUT_TOKENS", "6500")),
+        max_output_tokens=max_output_tokens,
         temperature=0.8,
     )
     return json.loads(response.output_text)

@@ -138,10 +138,10 @@
           <label class="field">
             <span>장면 수</span>
             <div class="input-with-button">
-              <input id="sceneCount" name="sceneCount" type="number" min="3" max="50" value="4">
+              <input id="sceneCount" name="sceneCount" type="number" min="3" max="10" value="4">
               <button class="button secondary compact-button" id="customSceneButton" type="button">직접 입력</button>
             </div>
-            <small>3장면부터 50장면까지 입력할 수 있습니다.</small>
+            <small>3장면부터 10장면까지 입력할 수 있습니다.</small>
           </label>
 
           <label class="field">
@@ -159,26 +159,32 @@
                 <option value="90 seconds">1분 30초</option>
                 <option value="120 seconds">2분</option>
                 <option value="180 seconds">3분</option>
+                <option value="300 seconds">5분</option>
+                <option value="600 seconds">10분</option>
+                <option value="1800 seconds">30분</option>
+                <option value="3690 seconds">1시간 1분 30초</option>
               </select>
               <button class="button secondary compact-button" id="customDurationButton" type="button">직접 입력</button>
             </div>
             <div class="custom-duration" id="customDurationWrap" hidden>
-              <input id="customDuration" name="customDuration" type="number" min="6" max="180" placeholder="예: 75">
-              <small>6초부터 180초(3분)까지 초 단위로 입력합니다.</small>
+              <input id="customDuration" name="customDuration" type="number" min="6" max="3690" placeholder="예: 75">
+              <small>6초부터 3690초(1시간 1분 30초)까지 초 단위로 입력합니다.</small>
             </div>
           </label>
 
           <fieldset class="field option-box">
             <legend>이미지/영상 프롬프트 도구</legend>
-            <label><input type="checkbox" name="tools" value="FLOW" checked> FLOW</label>
-            <label><input type="checkbox" name="tools" value="Midjourney" checked> Midjourney</label>
-            <label><input type="checkbox" name="tools" value="Kling" checked> Kling</label>
-            <label><input type="checkbox" name="tools" value="HeyGen" checked> HeyGen</label>
+            <small>한 번에 최대 2개 도구까지만 선택할 수 있습니다.</small>
+            <label><input type="checkbox" name="tools" value="FLOW"> FLOW</label>
+            <label><input type="checkbox" name="tools" value="Midjourney"> Midjourney</label>
+            <label><input type="checkbox" name="tools" value="Kling"> Kling</label>
+            <label><input type="checkbox" name="tools" value="HeyGen"> HeyGen</label>
           </fieldset>
 
           <fieldset class="field option-box">
             <legend>수노 음악 프롬프트 옵션</legend>
-            <label><input id="includeLyrics" type="checkbox" checked> 가사 포함</label>
+            <small>수노 음악 프롬프트를 만들 때 필요한 옵션을 직접 선택합니다.</small>
+            <label><input id="includeLyrics" type="checkbox"> 가사 포함</label>
             <label><input id="instrumental" type="checkbox"> 배경음악 중심</label>
           </fieldset>
 
@@ -199,7 +205,10 @@
           <details class="action-accordion wide" open>
             <summary>작성 버튼</summary>
             <div class="form-actions">
-              <button class="button primary" type="submit">스토리보드와 프롬프트 작성하기</button>
+              <button class="button primary" id="scenarioButton" type="submit">2. 시나리오 생성</button>
+              <button class="button secondary" id="characterSheetButton" type="button" disabled>3. 캐릭터 시트 프롬프트 생성</button>
+              <button class="button secondary" id="imageVideoPromptButton" type="button" disabled>4. 이미지·영상 프롬프트 생성</button>
+              <button class="button secondary" id="sunoPromptButton" type="button" disabled>5. 수노 음악 프롬프트 생성</button>
               <button class="button secondary" id="sampleButton" type="button">예시 채우기</button>
               <button class="button ghost" id="clearButton" type="button">초기화</button>
             </div>
