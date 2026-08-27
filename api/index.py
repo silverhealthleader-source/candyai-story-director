@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import unquote, urlparse
@@ -76,6 +77,11 @@ def _validate(payload):
             return "이미지/영상 프롬프트 도구는 한 번에 최대 2개까지만 선택해 주세요."
     if scene_count < 3 or scene_count > 10:
         return "장면 수는 3개에서 10개 사이로 설정해 주세요."
+    duration_text = str(payload.get("duration", ""))
+    duration_match = re.search(r"(\d+)", duration_text)
+    duration_seconds = int(duration_match.group(1)) if duration_match else 0
+    if duration_seconds < 6 or duration_seconds > 90:
+        return "영상 길이는 6초에서 90초(1분 30초) 사이로 설정해 주세요."
     reference_images = payload.get("reference_images", [])
     if isinstance(reference_images, list) and len(reference_images) > 5:
         return "레퍼런스 이미지는 최대 5개까지 사용할 수 있습니다."

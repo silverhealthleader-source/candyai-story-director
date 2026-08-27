@@ -1133,13 +1133,7 @@ const durationKo = {
   "30 seconds": "30초",
   "45 seconds": "45초",
   "60 seconds": "1분",
-  "90 seconds": "1분 30초",
-  "120 seconds": "2분",
-  "180 seconds": "3분",
-  "300 seconds": "5분",
-  "600 seconds": "10분",
-  "1800 seconds": "30분",
-  "3690 seconds": "1시간 1분 30초"
+  "90 seconds": "1분 30초"
 };
 
 const hasHangul = (value = "") => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
@@ -1181,7 +1175,7 @@ const clampNumber = (value, min, max, fallback) => {
 
 const selectedDuration = () => {
   const customSeconds = customDurationWrap && !customDurationWrap.hidden
-    ? clampNumber(customDurationInput.value, 6, 3690, 0)
+    ? clampNumber(customDurationInput.value, 6, 90, 0)
     : 0;
   if (customSeconds) {
     return `${customSeconds} seconds`;
@@ -2337,7 +2331,7 @@ customDurationButton.addEventListener("click", () => {
   customDurationWrap.hidden = !customDurationWrap.hidden;
   if (!customDurationWrap.hidden) {
     customDurationInput.focus();
-    setStatus("영상 길이를 6초부터 3690초(1시간 1분 30초) 사이로 직접 입력할 수 있습니다.");
+    setStatus("영상 길이를 6초부터 90초(1분 30초) 사이로 직접 입력할 수 있습니다.");
   }
 });
 
