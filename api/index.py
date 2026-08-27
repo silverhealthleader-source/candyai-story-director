@@ -150,6 +150,10 @@ Include lyrics: {payload.get("include_lyrics")}
 Instrumental preference: {payload.get("instrumental")}
 
 Rules:
+- Keep the response concise enough for a web app. Prefer practical production-ready prompts over long explanations.
+- Write each storyboard summary in 1 sentence per language.
+- Write each image/video prompt as one compact production prompt per language, not a paragraph essay.
+- Write character sheet fields as compact but specific descriptions.
 - The app writes prompts only. It does not directly create images, videos, or music.
 - Make the quality suitable for a polished children's picture book and short-form video production.
 - Create separate character sheets for the protagonist and every named supporting character found in Character notes.
@@ -193,7 +197,7 @@ def _generate(payload):
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY 환경 변수가 설정되어 있지 않습니다.")
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, timeout=45)
     response = client.responses.create(
         model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
         input=[
@@ -201,6 +205,7 @@ def _generate(payload):
             {"role": "user", "content": _build_user_prompt(payload)},
         ],
         text={"format": {"type": "json_object"}},
+        max_output_tokens=int(os.environ.get("OPENAI_MAX_OUTPUT_TOKENS", "6500")),
         temperature=0.8,
     )
     return json.loads(response.output_text)

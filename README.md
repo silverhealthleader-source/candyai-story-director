@@ -116,6 +116,7 @@ http://localhost:8000
 ```text
 OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4.1-mini
+OPENAI_MAX_OUTPUT_TOKENS=6500
 ```
 
 API 키는 코드, README, 스크린샷, GitHub 커밋에 절대 노출하지 않습니다.
@@ -179,6 +180,7 @@ git push -u origin main
 ```text
 OPENAI_API_KEY
 OPENAI_MODEL
+OPENAI_MAX_OUTPUT_TOKENS
 ```
 
 6. `OPENAI_API_KEY` 값에는 본인의 OpenAI API 키를 넣습니다.
@@ -188,9 +190,15 @@ OPENAI_MODEL
 gpt-4.1-mini
 ```
 
-8. **Deploy**를 누릅니다.
-9. 배포가 끝나면 Vercel URL을 복사합니다.
-10. 아래 칸에 붙여 넣습니다.
+8. `OPENAI_MAX_OUTPUT_TOKENS` 값에는 아래 값을 넣습니다.
+
+```text
+6500
+```
+
+9. **Deploy**를 누릅니다.
+10. 배포가 끝나면 Vercel URL을 복사합니다.
+11. 아래 칸에 붙여 넣습니다.
 
 배포 URL: https://candyai-story-director-seven.vercel.app
 
@@ -478,6 +486,7 @@ git push
 현재 앱은 45초 타임아웃을 적용해 응답이 늦으면 사용자에게 안내합니다. 추가 개선 방안은 다음과 같습니다.
 
 - 모델 경량화: 기본 모델은 `OPENAI_MODEL=gpt-4.1-mini`처럼 빠른 모델을 사용합니다.
+- 출력량 제한: `OPENAI_MAX_OUTPUT_TOKENS=6500`으로 응답 길이를 제한해 너무 긴 JSON 생성으로 인한 지연을 줄입니다.
 - 장면 수 제한: 기본 장면 수는 적게 시작하고, 사용자가 필요할 때 50장면까지 확장합니다.
 - 입력 요약: 1200자에 가까운 긴 입력은 핵심 인물, 배경, 사건 중심으로 요약해 요청합니다.
 - 응답 요약 로직: 장면 수가 많을 때는 먼저 장면 제목과 줄거리만 생성하고, 사용자가 선택한 장면의 프롬프트를 추가 생성하는 방식으로 확장할 수 있습니다.
